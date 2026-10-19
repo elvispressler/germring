@@ -1,0 +1,805 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: FFB Lokal - Lokalnachrichtenmedium API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: articles
+    description: Article operations
+  - name: categories
+    description: Category operations
+  - name: sponsors
+    description: Sponsor operations
+  - name: summary
+    description: Site summary and stats
+  - name: generate
+    description: AI-powered content generation
+paths:
+  /foerder-links/targets:
+    get:
+      operationId: getFundingLinkTargets
+      tags: [articles]
+      summary: Get editorially corrected public funding link targets
+      responses:
+        "200":
+          description: Corrected targets currently used on the public funding page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FundingLinkTargetsResponse"
+
+  /admin/foerder-links/repair-check:
+    post:
+      operationId: checkFundingLinkReplacement
+      tags: [articles]
+      summary: Check a replacement target for a currently broken funding link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FundingLinkRepairInput"
+      responses:
+        "200":
+          description: Reachability result for the proposed target
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FundingLinkRepairCheckResponse"
+        "400":
+          description: Invalid source or URL
+        "409":
+          description: The source is not currently an HTTP 404
+
+  /admin/foerder-links/repair:
+    post:
+      operationId: repairFundingLink
+      tags: [articles]
+      summary: Confirm and save a reachable replacement funding link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FundingLinkRepairInput"
+      responses:
+        "200":
+          description: Replacement target saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FundingLinkRepairResponse"
+        "400":
+          description: Invalid source or URL
+        "404":
+          description: Funding link source not found
+        "409":
+          description: The source is no longer an HTTP 404
+        "422":
+          description: Replacement target is not reachable
+
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /articles:
+    get:
+      operationId: listArticles
+      tags: [articles]
+      summary: List articles
+      parameters:
+        - name: categorySlug
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: List of articles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Article"
+    post:
+      operationId: createArticle
+      tags: [articles]
+      summary: Create article
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ArticleInput"
+      responses:
+        "201":
+          description: Created article
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Article"
+
+  /articles/featured:
+    get:
+      operationId: getFeaturedArticles
+      tags: [articles]
+      summary: Get featured articles for homepage hero
+      responses:
+        "200":
+          description: Featured articles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Article"
+
+  /articles/images/migrate:
+    post:
+      operationId: migrateArticleImages
+      tags: [articles]
+      summary: Copy existing article photos to project storage
+      responses:
+        "200":
+          description: Per-article result of the photo migration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MigrateArticleImagesResponse"
+
+  /articles/images/search:
+    post:
+      operationId: searchArticleImages
+      tags: [articles]
+      summary: Search reviewed free-license article photo candidates
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ArticleImageSearchInput"
+      responses:
+        "200":
+          description: Topic-matched candidates not already assigned to articles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArticleImageSearchResponse"
+
+  /storage/article-photos/{filename}:
+    get:
+      operationId: getStoredArticlePhoto
+      tags: [articles]
+      summary: Serve a publicly viewable stored article photo
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[a-f0-9-]+\\.(jpg|png|webp|gif|avif)$"
+      responses:
+        "200":
+          description: Stored image bytes
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/webp:
+              schema:
+                type: string
+                format: binary
+            image/gif:
+              schema:
+                type: string
+                format: binary
+            image/avif:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Photo not found
+
+  /articles/{id}:
+    get:
+      operationId: getArticle
+      tags: [articles]
+      summary: Get article by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Single article
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Article"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateArticle
+      tags: [articles]
+      summary: Update article
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ArticleUpdate"
+      responses:
+        "200":
+          description: Updated article
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Article"
+    delete:
+      operationId: deleteArticle
+      tags: [articles]
+      summary: Delete article
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [categories]
+      summary: List all categories
+      responses:
+        "200":
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+    post:
+      operationId: createCategory
+      tags: [categories]
+      summary: Create category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryInput"
+      responses:
+        "201":
+          description: Created category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+
+  /sponsors/active:
+    get:
+      operationId: getActiveSponsor
+      tags: [sponsors]
+      summary: Get the active sponsor (optionally filtered by category slug)
+      parameters:
+        - name: categorySlug
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Active sponsor(s) for the given context
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Sponsor"
+
+  /summary:
+    get:
+      operationId: getSiteSummary
+      tags: [summary]
+      summary: Get site summary with article counts per category
+      responses:
+        "200":
+          description: Site summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiteSummary"
+
+  /generate/artikel:
+    post:
+      operationId: generateArtikel
+      tags: [generate]
+      summary: Generate article content from template fields using AI (SSE stream)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateArtikelBody"
+      responses:
+        "200":
+          description: Server-sent events stream with generated content
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
+components:
+  schemas:
+    FundingLinkRepairInput:
+      type: object
+      required: [sourceId, url]
+      properties:
+        sourceId:
+          type: string
+          minLength: 1
+        url:
+          type: string
+          format: uri
+
+    FundingLinkTarget:
+      type: object
+      required: [sourceId, targetUrl]
+      properties:
+        sourceId:
+          type: string
+        targetUrl:
+          type: string
+          format: uri
+
+    FundingLinkTargetsResponse:
+      type: object
+      required: [targets]
+      properties:
+        targets:
+          type: array
+          items:
+            $ref: "#/components/schemas/FundingLinkTarget"
+
+    FundingLinkRepairCheckResponse:
+      type: object
+      required: [sourceId, url, eligible, reachable, status, finalUrl, pageTitle, error]
+      properties:
+        sourceId:
+          type: string
+        url:
+          type: string
+          format: uri
+        eligible:
+          type: boolean
+        reachable:
+          type: boolean
+        status:
+          type: ["integer", "null"]
+        finalUrl:
+          type: ["string", "null"]
+          format: uri
+        pageTitle:
+          type: ["string", "null"]
+        error:
+          type: ["string", "null"]
+
+    FundingLinkRepairResponse:
+      type: object
+      required: [sourceId, url, saved]
+      properties:
+        sourceId:
+          type: string
+        url:
+          type: string
+          format: uri
+        saved:
+          type: boolean
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ArticleSource:
+      type: object
+      required:
+        - label
+      properties:
+        label:
+          type: string
+        url:
+          type: ["string", "null"]
+
+    Article:
+      type: object
+      required:
+        - id
+        - title
+        - slug
+        - excerpt
+        - content
+        - categoryId
+        - categoryName
+        - categorySlug
+        - author
+        - publishedAt
+        - imageSourceUrl
+        - imageSourcePageUrl
+        - imageLicense
+        - imageCredit
+        - featured
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        slug:
+          type: string
+        excerpt:
+          type: string
+        content:
+          type: string
+        categoryId:
+          type: integer
+        categoryName:
+          type: string
+        categorySlug:
+          type: string
+        author:
+          type: string
+        publishedAt:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        imageSourceUrl:
+          type: ["string", "null"]
+        imageSourcePageUrl:
+          type: ["string", "null"]
+          format: uri
+        imageLicense:
+          type: ["string", "null"]
+        imageCredit:
+          type: ["string", "null"]
+        featured:
+          type: boolean
+        readingMinutes:
+          type: integer
+        tags:
+          type: array
+          items:
+            type: string
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/ArticleSource"
+
+    MigrateArticleImagesResponse:
+      type: object
+      required:
+        - total
+        - migrated
+        - failed
+        - results
+      properties:
+        total:
+          type: integer
+        migrated:
+          type: integer
+        failed:
+          type: integer
+        results:
+          type: array
+          items:
+            type: object
+            required:
+              - articleId
+              - title
+              - status
+            properties:
+              articleId:
+                type: integer
+              title:
+                type: string
+              status:
+                type: string
+                enum: [migrated, failed]
+              message:
+                type: string
+
+    ArticleImageSearchInput:
+      type: object
+      required: [title, excerpt, categoryId]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 240
+        excerpt:
+          type: string
+          maxLength: 1200
+        categoryId:
+          type: integer
+          enum: [1, 2, 3, 4]
+
+    ArticleImageSearchCandidate:
+      type: object
+      required: [title, imageUrl, previewUrl, sourceUrl, license, credit]
+      properties:
+        title:
+          type: string
+        imageUrl:
+          type: string
+          format: uri
+        previewUrl:
+          type: string
+          format: uri
+        sourceUrl:
+          type: string
+          format: uri
+        license:
+          type: string
+        credit:
+          type: string
+
+    ArticleImageSearchResponse:
+      type: object
+      required: [candidates]
+      properties:
+        candidates:
+          type: array
+          items:
+            $ref: "#/components/schemas/ArticleImageSearchCandidate"
+
+    ArticleInput:
+      type: object
+      required:
+        - title
+        - slug
+        - excerpt
+        - content
+        - categoryId
+        - author
+        - imageUrl
+      properties:
+        title:
+          type: string
+          minLength: 1
+        slug:
+          type: string
+          minLength: 1
+        excerpt:
+          type: string
+          minLength: 1
+        content:
+          type: string
+          minLength: 1
+        categoryId:
+          type: integer
+        author:
+          type: string
+          minLength: 1
+        imageUrl:
+          type: string
+        imageSourcePageUrl:
+          type: ["string", "null"]
+          format: uri
+        imageLicense:
+          type: ["string", "null"]
+        imageCredit:
+          type: ["string", "null"]
+        featured:
+          type: boolean
+          default: false
+        tags:
+          type: array
+          items:
+            type: string
+          default: []
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/ArticleSource"
+          default: []
+
+    ArticleUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+        slug:
+          type: string
+          minLength: 1
+        excerpt:
+          type: string
+          minLength: 1
+        content:
+          type: string
+          minLength: 1
+        categoryId:
+          type: integer
+        author:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        imageSourcePageUrl:
+          type: ["string", "null"]
+          format: uri
+        imageLicense:
+          type: ["string", "null"]
+        imageCredit:
+          type: ["string", "null"]
+        featured:
+          type: boolean
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/ArticleSource"
+
+    Category:
+      type: object
+      required:
+        - id
+        - name
+        - slug
+        - color
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        color:
+          type: string
+        description:
+          type: ["string", "null"]
+        articleCount:
+          type: integer
+
+    CategoryInput:
+      type: object
+      required:
+        - name
+        - slug
+        - color
+      properties:
+        name:
+          type: string
+          minLength: 1
+        slug:
+          type: string
+          minLength: 1
+        color:
+          type: string
+        description:
+          type: string
+
+    CategoryStat:
+      type: object
+      required:
+        - categoryId
+        - categoryName
+        - categorySlug
+        - color
+        - count
+      properties:
+        categoryId:
+          type: integer
+        categoryName:
+          type: string
+        categorySlug:
+          type: string
+        color:
+          type: string
+        count:
+          type: integer
+
+    Sponsor:
+      type: object
+      required:
+        - id
+        - name
+        - ctaLabel
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        logoUrl:
+          type: ["string", "null"]
+        website:
+          type: ["string", "null"]
+        tagline:
+          type: ["string", "null"]
+        ctaLabel:
+          type: string
+        categoryId:
+          type: ["integer", "null"]
+        categorySlug:
+          type: ["string", "null"]
+
+    SiteSummary:
+      type: object
+      required:
+        - totalArticles
+        - totalCategories
+        - categoryStats
+        - latestPublishedAt
+      properties:
+        totalArticles:
+          type: integer
+        totalCategories:
+          type: integer
+        categoryStats:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoryStat"
+        latestPublishedAt:
+          type: ["string", "null"]
+
+    GenerateArtikelBody:
+      type: object
+      required:
+        - categoryId
+        - title
+        - fields
+      properties:
+        categoryId:
+          type: integer
+        title:
+          type: string
+        fields:
+          type: object
+          additionalProperties:
+            type: string

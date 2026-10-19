@@ -1,0 +1,39 @@
+kind = "web"
+previewPath = "/"
+title = "FFB Lokal"
+version = "1.0.0"
+id = "artifacts/ffb-lokal"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23013
+
+[services.development]
+run = "pnpm --filter @workspace/ffb-lokal run dev"
+
+[services.production]
+
+[services.production.build]
+args = [ "pnpm", "--filter", "@workspace/ffb-lokal", "run", "build" ]
+
+[services.production.build.env]
+PORT = "23013"
+BASE_PATH = "/"
+NODE_ENV = "production"
+
+[services.production.run]
+args = [ "node", "artifacts/ffb-lokal/server.mjs" ]
+
+[services.production.run.env]
+PORT = "23013"
+NODE_ENV = "production"
+
+[services.env]
+PORT = "23013"
+BASE_PATH = "/"

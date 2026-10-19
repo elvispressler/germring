@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/woche
+
+Sitemap: https://germring.de/api/sitemap.xml

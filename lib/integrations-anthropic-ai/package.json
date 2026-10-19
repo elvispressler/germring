@@ -1,0 +1,27 @@
+{
+  "name": "@workspace/integrations-anthropic-ai",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "workspace": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./src/index.ts"
+    },
+    "./batch": {
+      "workspace": "./src/batch/index.ts",
+      "types": "./dist/batch/index.d.ts",
+      "import": "./src/batch/index.ts"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
+    "p-limit": "^7.3.0",
+    "p-retry": "^7.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:"
+  }
+}

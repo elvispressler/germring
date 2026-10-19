@@ -1,0 +1,23 @@
+@import url("https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&family=Public+Sans:wght@300;400;500;600;700&display=swap");
+
+.germring-hero-preview {
+  font-family: "Public Sans", sans-serif;
+}
+
+.germring-hero-preview h1,
+.germring-hero-preview h2,
+.germring-hero-preview h3 {
+  font-family: "Merriweather", serif;
+}
+
+.germring-hero-preview a,
+.germring-hero-preview button {
+  transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease,
+    box-shadow 180ms ease, transform 180ms ease;
+}
+
+.germring-hero-preview a:focus-visible,
+.germring-hero-preview button:focus-visible {
+  outline: 3px solid rgba(16, 185, 129, 0.45);
+  outline-offset: 3px;
+}

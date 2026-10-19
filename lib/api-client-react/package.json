@@ -1,0 +1,20 @@
+{
+  "name": "@workspace/api-client-react",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "workspace": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "dependencies": {
+    "@tanstack/react-query": "catalog:"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  }
+}

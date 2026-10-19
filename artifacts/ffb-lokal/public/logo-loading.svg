@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220">
+  <style>
+    @keyframes logo-spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes logo-draw {
+      0% { stroke-dashoffset: 1; }
+      58%, 82% { stroke-dashoffset: 0; }
+      100% { stroke-dashoffset: 1; }
+    }
+    .mark {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: logo-spin 3.2s linear infinite;
+    }
+    .stroke {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      animation: logo-draw 2.4s cubic-bezier(.65, 0, .35, 1) infinite;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .mark, .stroke { animation: none; }
+      .stroke { stroke-dashoffset: 0; }
+    }
+  </style>
+  <g class="mark" transform="translate(3 55)">
+    <path
+      class="stroke"
+      pathLength="1"
+      d="M91 20 C82 12 70 9 58 11 C36 14 20 32 19 54 C17 78 34 96 57 98 C78 100 94 86 98 69 C100 63 100 58 98 53 H130 V18 H165 C183 18 194 28 194 43 C194 58 183 68 165 68 H130 V99 M98 53 H75 M130 68 L181 101"
+      fill="none"
+      stroke="#263e38"
+      stroke-width="9"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </g>
+</svg>
